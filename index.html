@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket DLC</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* === ПЕРЕМЕННЫЕ ДЛЯ ТЕМ === */
+        :root {
+            --bg-body: #0a0a0c;
+            --bg-card: #141418;
+            --bg-card-hover: #1c1c22;
+            --text-main: #f0f0f5;
+            --text-muted: #8a8a93;
+            --border: #2a2a32;
+            --btn-bg: #1c1c22;
+            --btn-hover: #2a2a32;
+            --primary: #6c5ce7;
+            --primary-hover: #5a4bd1;
+            --accent: #a29bfe;
+            --danger: #ff7675;
+            --danger-bg: #2d1f1f;
+            --success: #00b894;
+            --gradient-1: linear-gradient(135deg, #6c5ce7, #a29bfe);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f5f5f7;
+            --bg-card: #ffffff;
+            --bg-card-hover: #f8f8fa;
+            --text-main: #1a1a1e;
+            --text-muted: #6e6e78;
+            --border: #e0e0e6;
+            --btn-bg: #f0f0f4;
+            --btn-hover: #e4e4ea;
+            --primary: #6c5ce7;
+            --primary-hover: #5a4bd1;
+            --danger: #d63031;
+            --danger-bg: #ffe5e5;
+            --success: #00b894;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* === CANVAS ДЛЯ ЧАСТИЦ === */
+        #particles-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+        }
+
+        .container {
+            max-width: 1100px; margin: 0 auto; padding: 0 20px;
+            position: relative; z-index: 1;
+        }
+
+        /* === НАВИГАЦИЯ === */
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px;
+            position: relative; z-index: 10;
+        }
+        .logo {
+            font-size: 22px; font-weight: 800; letter-spacing: 1px;
+            background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+        }
+        .logo span { font-size: 28px; -webkit-text-fill-color: initial; }
+        
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+        .icon-btn, .theme-toggle {
+            background: var(--btn-bg); border: 1px solid var(--border);
+            font-size: 18px; cursor: pointer; padding: 8px 12px; border-radius: 8px;
+            color: var(--text-main); display: flex; align-items: center; justify-content: center;
+            height: 40px; position: relative; z-index: 11;
+        }
+        .icon-btn:hover, .theme-toggle:hover { background: var(--btn-hover); }
+
+        /* === ЭКРАН ПРИВЕТСТВИЯ === */
+        #welcomeView {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 70vh; cursor: pointer; text-align: center; animation: fadeIn 0.8s ease;
+        }
+        .rocket-r {
+            font-size: 160px; font-weight: 900; line-height: 1;
+            background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 10px; position: relative; animation: pulse 2s infinite alternate;
+        }
+        .rocket-r::after {
+            content: '🚀'; position: absolute; top: 10px; right: -50px; font-size: 42px;
+            -webkit-text-fill-color: initial; animation: float 2s ease-in-out infinite;
+        }
+        .rocket-title { font-size: 36px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 10px; }
+        .rocket-subtitle { color: var(--text-muted); font-size: 14px; animation: blink 1.5s infinite; }
+
+        /* === ЭКРАН ВХОДА / РЕГИСТРАЦИИ === */
+        #loginView { display: none; animation: fadeIn 0.5s ease; }
+        .login-box {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 40px; max-width: 420px; margin: 40px auto; text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .auth-tabs { display: flex; background: var(--btn-bg); border-radius: 8px; margin-bottom: 24px; padding: 4px; }
+        .auth-tab {
+            flex: 1; padding: 10px; border: none; background: transparent;
+            color: var(--text-muted); font-size: 14px; font-weight: 600;
+            cursor: pointer; border-radius: 6px; transition: all 0.2s;
+        }
+        .auth-tab.active { background: var(--bg-card); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .login-box h1 { font-size: 24px; margin-bottom: 8px; }
+        .login-box .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        
+        .input-group { margin-bottom: 12px; }
+        .input-group input {
+            width: 100%; padding: 12px 16px; background: var(--bg-body);
+            border: 1px solid var(--border); border-radius: 8px; color: var(--text-main);
+            font-size: 15px; outline: none; transition: border-color 0.2s;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+        
+        .auth-error { color: var(--danger); font-size: 13px; text-align: left; margin-bottom: 12px; min-height: 18px; }
+        
+        .auth-submit-btn {
+            width: 100%; padding: 12px; background: var(--primary); color: #fff;
+            border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s; margin-bottom: 20px;
+        }
+        .auth-submit-btn:hover { background: var(--primary-hover); }
+
+        #buttonDiv { display: flex; justify-content: center; margin-bottom: 15px; }
+        .divider { display: flex; align-items: center; color: var(--text-muted); font-size: 14px; margin: 20px 0; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
+        .divider::before { margin-right: 10px; } .divider::after { margin-left: 10px; }
+        
+        .guest-btn {
+            width: 100%; padding: 12px; background: var(--btn-bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-main); font-size: 15px; font-weight: 500; cursor: pointer;
+        }
+        .guest-btn:hover { background: var(--btn-hover); }
+
+        /* === ЛЕНДИНГ === */
+        #landingView { display: none; animation: fadeIn 0.5s ease; padding-bottom: 60px; }
+        .hero { text-align: center; padding: 40px 20px; }
+        .hero h2 {
+            font-size: 48px; font-weight: 800; line-height: 1.1; margin-bottom: 16px;
+            background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 18px; color: var(--text-muted); max-width: 600px; margin: 0 auto 32px; line-height: 1.6; }
+        .cta-btn {
+            display: inline-block; padding: 14px 36px; background: var(--primary); color: #fff;
+            border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;
+        }
+        .cta-btn:hover { background: var(--primary-hover); }
+
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; padding: 20px 0 40px; }
+        .feature-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+        .feature-icon { font-size: 32px; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 18px; margin-bottom: 8px; }
+        .feature-card p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+        .section-title { text-align: center; font-size: 32px; font-weight: 700; margin-bottom: 10px; }
+        .section-subtitle { text-align: center; color: var(--text-muted); margin-bottom: 40px; font-size: 15px; }
+        
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+        .pricing-card {
+            background: var(--bg-card); border: 2px solid var(--border); border-radius: 16px;
+            padding: 32px 24px; text-align: center; position: relative;
+        }
+        .pricing-card.popular { border-color: var(--primary); }
+        .popular-badge {
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: #fff; font-size: 11px; font-weight: 700;
+            padding: 3px 12px; border-radius: 12px; text-transform: uppercase;
+        }
+        .plan-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .plan-price { font-size: 42px; font-weight: 800; margin-bottom: 4px; }
+        .plan-price span { font-size: 16px; font-weight: 400; color: var(--text-muted); }
+        .plan-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+        .buy-btn {
+            width: 100%; padding: 12px; background: var(--btn-bg); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text-main); font-size: 15px; font-weight: 600; cursor: pointer;
+        }
+        .pricing-card.popular .buy-btn { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .buy-btn:hover { opacity: 0.9; }
+
+        .faq-section { padding: 40px 0 20px; }
+        .faq-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+        .faq-question { padding: 18px 24px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; justify-content: space-between; }
+        .faq-question::after { content: '+'; font-size: 20px; color: var(--text-muted); transition: transform 0.3s; }
+        .faq-item.open .faq-question::after { transform: rotate(45deg); }
+        .faq-answer { max-height: 0; overflow: hidden; transition: all 0.3s ease; padding: 0 24px; color: var(--text-muted); font-size: 14px; }
+        .faq-item.open .faq-answer { max-height: 200px; padding: 0 24px 18px; }
+
+        /* === ЛИЧНЫЙ КАБИНЕТ === */
+        #appView { display: none; animation: fadeIn 0.5s ease; }
+        .dashboard-layout { display: flex; gap: 30px; align-items: flex-start; }
+
+        .sidebar {
+            width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px; position: sticky; top: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .tab-btn {
+            text-align: left; padding: 12px 16px; background: transparent; border: none;
+            border-left: 3px solid transparent; border-radius: 8px; color: var(--text-muted);
+            font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .tab-btn:hover { background: var(--btn-bg); color: var(--text-main); }
+        .tab-btn.active { background: var(--btn-bg); color: var(--primary); border-left-color: var(--primary); font-weight: 600; }
+        .logout-btn {
+            margin-top: 20px; text-align: left; padding: 12px 16px; background: transparent;
+            border: none; border-radius: 8px; color: var(--danger); font-size: 15px;
+            font-weight: 500; cursor: pointer;
+        }
+        .logout-btn:hover { background: var(--danger-bg); }
+
+        .main-content { flex: 1; min-width: 0; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+
+        .profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .profile-top { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
+        .profile-top img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--border); background: var(--btn-bg); }
+        .profile-info h3 { font-size: 22px; display: flex; align-items: center; gap: 8px; }
+        .profile-info p { color: var(--text-muted); font-size: 14px; }
+        .edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px; color: var(--text-muted); }
+        .edit-btn:hover { background: var(--btn-hover); }
+        #editNameBlock { display: none; margin-top: 8px; gap: 8px; }
+        #editNameBlock input { padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-body); color: var(--text-main); outline: none; }
+        #editNameBlock button { padding: 8px 14px; background: var(--primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+
+        .info-grid { display: flex; flex-direction: column; gap: 2px; }
+        .info-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-muted); }
+        .info-value { font-weight: 600; text-align: right; }
+
+        .download-locked { text-align: center; padding: 60px 20px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .lock-icon { font-size: 48px; margin-bottom: 16px; }
+        .download-locked h3 { margin-bottom: 8px; }
+        .download-locked p { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+        .launcher-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; display: flex; justify-content: space-between; align-items: center; gap: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .launcher-info { display: flex; align-items: center; gap: 16px; }
+        .launcher-icon { width: 56px; height: 56px; border-radius: 12px; background: var(--gradient-1); display: flex; align-items: center; justify-content: center; font-size: 28px; color: #fff; }
+        .launcher-info h4 { font-size: 17px; margin-bottom: 4px; }
+        .launcher-info p { font-size: 13px; color: var(--text-muted); }
+        .dl-btn { padding: 12px 28px; background: var(--success); color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+        .buy-area .pricing-grid { grid-template-columns: 1fr; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
+        .modal-content { background: var(--bg-card); padding: 36px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; border: 1px solid var(--border); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+        .modal-icon { font-size: 48px; margin-bottom: 16px; }
+        .modal-content h3 { margin-bottom: 10px; color: var(--success); font-size: 22px; }
+        .modal-content p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+        .close-btn { width: 100%; padding: 12px; background: var(--primary); border: none; border-radius: 8px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.03); } }
+        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-15px) rotate(10deg); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        @media (max-width: 768px) {
+            .hero h2 { font-size: 32px; }
+            .dashboard-layout { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; position: static; }
+            .tab-btn { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; }
+            .tab-btn.active { border-left-color: transparent; border-bottom-color: var(--primary); }
+            .logout-btn { margin-top: 0; margin-left: auto; white-space: nowrap; border-bottom: 3px solid transparent; }
+            .launcher-card { flex-direction: column; text-align: center; }
+            .launcher-info { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<div class="container">
+    <nav class="navbar">
+        <div class="logo" onclick="goToLanding()" title="На главную">
+            <span>🚀</span> Rocket DLC
+        </div>
+        <div class="nav-actions">
+            <button class="icon-btn" id="navProfileBtn" onclick="goToProfile()" title="Личный кабинет" style="display: none;">👤</button>
+            <button class="theme-toggle" id="themeToggle" title="Сменить тему">🌙</button>
+        </div>
+    </nav>
+
+    <div id="welcomeView" onclick="proceedToLogin()">
+        <div class="rocket-r">R</div>
+        <div class="rocket-title">Rocket DLC</div>
+        <div class="rocket-subtitle">Нажмите, чтобы продолжить</div>
+    </div>
+
+    <div id="loginView">
+        <div class="login-box">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Вход</button>
+                <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Регистрация</button>
+            </div>
+            
+            <h1 id="authTitle">С возвращением</h1>
+            <p class="subtitle" id="authSubtitle">Войдите в свой аккаунт</p>
+            
+            <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <div class="input-group">
+                    <input type="email" id="authEmail" placeholder="Email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="authPassword" placeholder="Пароль" required minlength="6">
+                </div>
+                <div class="input-group" id="confirmPasswordGroup" style="display: none;">
+                    <input type="password" id="authConfirmPassword" placeholder="Повторите пароль" minlength="6">
+                </div>
+                <div id="authError" class="auth-error"></div>
+                <button type="submit" class="auth-submit-btn" id="authSubmitBtn">Войти</button>
+            </form>
+            
+            <div class="divider">или</div>
+            <div id="buttonDiv"></div>
+            <button class="guest-btn" id="guestBtn">Войти как гость</button>
+        </div>
+    </div>
+
+    <div id="landingView">
+        <section class="hero">
+            <h2>Rocket DLC повышает планку</h2>
+            <p>Современный клиент с потрясающей визуальной составляющей, плавной производительностью и стильным интерфейсом для чистого и захватывающего игрового опыта.</p>
+            <button class="cta-btn" onclick="openDashboardAndBuy()">Выбрать тариф</button>
+        </section>
+
+        <div class="features">
+            <div class="feature-card"><div class="feature-icon">🎯</div><h3>Продвинутые функции</h3><p>Улучшенный набор настроек производительности для повышения стабильности, отзывчивости и плавности игрового процесса.</p></div>
+            <div class="feature-card"><div class="feature-icon">⚡</div><h3>Максимальная производительность</h3><p>Оптимизация под любые системы. Работает стабильно даже на слабых машинах без потери качества.</p></div>
+            <div class="feature-card"><div class="feature-icon">🎨</div><h3>Стильный интерфейс</h3><p>Чистый и интуитивно понятный дизайн, который не отвлекает от игры и делает использование комфортным.</p></div>
+        </div>
+
+        <div class="faq-section">
+            <h2 class="section-title">Частые вопросы</h2>
+            <p class="section-subtitle">Ответы на вопросы, которые мы слышим чаще всего</p>
+            <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Как получить доступ после оплаты?</div><div class="faq-answer">После покупки подписки в вашем личном кабинете появится кнопка для скачивания лаунчера. Скачайте его, запустите и войдите в свой аккаунт.</div></div>
+            <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Какие системные требования?</div><div class="faq-answer">Всё, что комфортно запускает современные игры: Windows 10 или 11, 8 ГБ ОЗУ и Java 21.</div></div>
+        </div>
+    </div>
+
+    <div id="appView">
+        <div class="dashboard-layout">
+            <aside class="sidebar">
+                <button class="tab-btn active" data-target="tab-profile">👤 Профиль</button>
+                <button class="tab-btn" data-target="tab-download">⬇️ Скачать</button>
+                <button class="tab-btn" data-target="tab-buy">💳 Купить</button>
+                <button class="logout-btn" onclick="signOut()">🚪 Выйти</button>
+            </aside>
+
+            <main class="main-content">
+                <div id="tab-profile" class="tab-content active">
+                    <div class="profile-card">
+                        <div class="profile-top">
+                            <img id="avatar" src="" alt="Аватар">
+                            <div class="profile-info">
+                                <h3>
+                                    <span id="displayName">Имя</span>
+                                    <button class="edit-btn" id="editNameBtn" title="Редактировать">✏️</button>
+                                </h3>
+                                <p id="email">email@example.com</p>
+                            </div>
+                        </div>
+                        <div id="editNameBlock">
+                            <input type="text" id="nameInput" placeholder="Введите имя">
+                            <button id="saveNameBtn">ОК</button>
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-row"><span class="info-label">ID пользователя</span><span class="info-value" id="userId"></span></div>
+                            <div class="info-row"><span class="info-label">Тип аккаунта</span><span class="info-value" id="accountType"></span></div>
+                            <div class="info-row"><span class="info-label">Статус подписки</span><span class="info-value" id="subStatus" style="color: var(--text-muted);">Не активна</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-download" class="tab-content">
+                    <div class="download-locked" id="downloadLocked">
+                        <div class="lock-icon">🔒</div>
+                        <h3>Доступ закрыт</h3>
+                        <p>Чтобы скачать лаунчер, необходимо приобрести подписку.</p>
+                        <button class="cta-btn" onclick="switchTab('tab-buy')">Перейти к тарифам</button>
+                    </div>
+                    <div id="downloadUnlocked" style="display: none;">
+                        <div class="launcher-card">
+                            <div class="launcher-info">
+                                <div class="launcher-icon">🚀</div>
+                                <div>
+                                    <h4>Rocket Launcher</h4>
+                                    <p>Версия 2.4.1 • Windows 10/11 • ~45 МБ</p>
+                                </div>
+                            </div>
+                            <button class="dl-btn" onclick="downloadLauncher()">Скачать лаунчер</button>
+                        </div>
+                        <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-top: 16px;">После скачивания запустите файл и войдите под своим аккаунтом.</p>
+                    </div>
+                </div>
+
+                <div id="tab-buy" class="tab-content">
+                    <div class="buy-area">
+                        <div class="pricing-grid">
+                            <div class="pricing-card">
+                                <div class="plan-name">1 месяц</div>
+                                <div class="plan-price">299 <span>₽</span></div>
+                                <div class="plan-desc">Ежемесячный доступ</div>
+                                <button class="buy-btn" onclick="buyPlan('1 месяц', 299)">Купить</button>
+                            </div>
+                            <div class="pricing-card popular">
+                                <div class="popular-badge">Популярный</div>
+                                <div class="plan-name">3 месяца</div>
+                                <div class="plan-price">499 <span>₽</span></div>
+                                <div class="plan-desc">Квартальный доступ</div>
+                                <button class="buy-btn" onclick="buyPlan('3 месяца', 499)">Купить</button>
+                            </div>
+                            <div class="pricing-card">
+                                <div class="plan-name">Навсегда</div>
+                                <div class="plan-price">800 <span>₽</span></div>
+                                <div class="plan-desc">Пожизненный доступ</div>
+                                <button class="buy-btn" onclick="buyPlan('Навсегда', 800)">Купить</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="successModal">
+    <div class="modal-content">
+        <div class="modal-icon">✅</div>
+        <h3>Оплата прошла успешно!</h3>
+        <p id="modalText">Подписка активирована. Лаунчер доступен для скачивания.</p>
+        <button class="close-btn" onclick="closeModal()">Отлично</button>
+    </div>
+</div>
+
+<script>
+    // === 1. СИСТЕМА ЧАСТИЦ ===
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let isDarkTheme = document.documentElement.getAttribute('data-theme') !== 'light';
+    const particleCount = window.innerWidth < 768 ? 40 : 90;
+
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 1;
+            this.speedX = (Math.random() - 0.5) * 0.3;
+            this.speedY = Math.random() * 0.5 + 0.1;
+            this.opacity = Math.random() * 0.5 + 0.1;
+            this.updateColor();
+        }
+        updateColor() {
+            if (isDarkTheme) {
+                this.color = `rgba(162, 155, 254, ${this.opacity})`;
+                this.shadowColor = 'rgba(108, 92, 231, 0.8)';
+            } else {
+                this.color = `rgba(108, 92, 231, ${this.opacity})`;
+                this.shadowColor = 'rgba(162, 155, 254, 0.5)';
+            }
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if (this.y > canvas.height + 10 || this.x < -10 || this.x > canvas.width + 10) {
+                this.y = -10;
+                this.x = Math.random() * canvas.width;
+            }
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = this.shadowColor;
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animateParticles);
+    }
+    initParticles();
+    animateParticles();
+
+    function updateParticleColors() {
+        isDarkTheme = document.documentElement.getAttribute('data-theme') !== 'light';
+        particles.forEach(p => p.updateColor());
+    }
+
+    // === 2. КОНФИГУРАЦИЯ ===
+    const CLIENT_ID = 'ВАШ_CLIENT_ID'; // <-- Вставьте ваш ID
+    const GUEST_AVATAR = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a8a93"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+    
+    let currentUser = { name: '', email: '', id: '', avatar: '', type: '', subscription: 'Не активна' };
+
+    // === 3. БАЗА ДАННЫХ ===
+    function getUsers() { return JSON.parse(localStorage.getItem('rocket_users') || '[]'); }
+    function saveUsers(users) { localStorage.setItem('rocket_users', JSON.stringify(users)); }
+
+    // === 4. ФОРМА ВХОДА/РЕГИСТРАЦИИ ===
+    let authMode = 'login';
+
+    function switchAuthTab(mode) {
+        authMode = mode;
+        document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+        document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+        document.getElementById('authTitle').textContent = mode === 'login' ? 'С возвращением' : 'Создать аккаунт';
+        document.getElementById('authSubtitle').textContent = mode === 'login' ? 'Войдите в свой аккаунт' : 'Зарегистрируйтесь, чтобы начать';
+        document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Войти' : 'Зарегистрироваться';
+        document.getElementById('confirmPasswordGroup').style.display = mode === 'register' ? 'block' : 'none';
+        document.getElementById('authError').textContent = '';
+        document.getElementById('authPassword').value = '';
+        document.getElementById('authConfirmPassword').value = '';
+    }
+
+    function handleAuthSubmit(e) {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value.trim().toLowerCase();
+        const password = document.getElementById('authPassword').value;
+        const confirmPassword = document.getElementById('authConfirmPassword').value;
+        const errorEl = document.getElementById('authError');
+        errorEl.textContent = '';
+
+        if (authMode === 'register') {
+            if (password.length < 6) { errorEl.textContent = 'Пароль должен содержать минимум 6 символов'; return; }
+            if (password !== confirmPassword) { errorEl.textContent = 'Пароли не совпадают'; return; }
+            
+            let users = getUsers();
+            // Строгая проверка: есть ли уже такой email (включая Google-аккаунты)
+            if (users.find(u => u.email.toLowerCase() === email)) {
+                errorEl.textContent = 'Этот Email уже зарегистрирован. Попробуйте войти или используйте Google.';
+                return;
+            }
+            
+            const newUser = {
+                email: email, password: password, name: email.split('@')[0],
+                id: 'user-' + Date.now(), avatar: GUEST_AVATAR,
+                type: 'Аккаунт Rocket DLC', subscription: 'Не активна'
+            };
+            
+            users.push(newUser);
+            saveUsers(users);
+            loginSuccess(newUser);
+            
+        } else {
+            let users = getUsers();
+            const user = users.find(u => u.email.toLowerCase() === email && u.password === password);
+            if (!user) {
+                errorEl.textContent = 'Неверный email или пароль (или аккаунт создан через Google)';
+                return;
+            }
+            loginSuccess(user);
+        }
+    }
+
+    function loginSuccess(userData) {
+        currentUser = { ...userData };
+        localStorage.setItem('rocket_session', JSON.stringify(currentUser));
+        showLanding();
+    }
+
+    // === 5. ПРИВЕТСТВИЕ И ТЕМА ===
+    let isWelcomeSkipped = false;
+    function proceedToLogin() {
+        if (isWelcomeSkipped) return;
+        isWelcomeSkipped = true;
+        const w = document.getElementById('welcomeView');
+        w.style.opacity = '0';
+        w.style.transition = 'opacity 0.4s';
+        setTimeout(() => { w.style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }, 400);
+    }
+
+    const themeToggle = document.getElementById('themeToggle');
+    const html = document.documentElement;
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    html.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    if (savedTheme === 'light') { isDarkTheme = false; updateParticleColors(); }
+
+    themeToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const currentTheme = html.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        updateParticleColors();
+    });
+
+    // === 6. НАВИГАЦИЯ ===
+    function goToLanding() {
+        if (!currentUser.id) return;
+        document.getElementById('appView').style.display = 'none';
+        document.getElementById('landingView').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goToProfile() {
+        document.getElementById('landingView').style.display = 'none';
+        document.getElementById('appView').style.display = 'block';
+        switchTab('tab-profile');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function openDashboardAndBuy() {
+        document.getElementById('landingView').style.display = 'none';
+        document.getElementById('appView').style.display = 'block';
+        switchTab('tab-buy');
+        updateUI();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchTab(targetId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const btn = document.querySelector(`.tab-btn[data-target="${targetId}"]`);
+        if (btn) btn.classList.add('active');
+        const content = document.getElementById(targetId);
+        if (content) content.classList.add('active');
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.target));
+    });
+
+    function toggleFaq(el) { el.parentElement.classList.toggle('open'); }
+
+    // === 7. GOOGLE АВТОРИЗАЦИЯ ===
+    function decodeJwtResponse(token) {
+        let base64Url = token.split('.')[1];
+        let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+    }
+
+    function handleCredentialResponse(response) {
+        const payload = decodeJwtResponse(response.credential);
+        const googleEmail = payload.email.toLowerCase(); // Приводим к нижнему регистру
+        
+        let users = getUsers();
+        // Ищем, есть ли уже пользователь с таким Email (зарегистрированный обычным способом или ранее через Google)
+        const existingUser = users.find(u => u.email.toLowerCase() === googleEmail);
+
+        if (existingUser) {
+            // Если пользователь уже есть в базе (например, регался через пароль), 
+            // мы не создаем дубликат, а просто авторизуем его.
+            // (Опционально: можно обновить ему аватарку или имя из Google, если они были пустые)
+            if (!existingUser.avatar || existingUser.avatar === GUEST_AVATAR) {
+                existingUser.avatar = payload.picture;
+            }
+            saveUsers(users);
+            loginSuccess(existingUser);
+        } else {
+            // Если это новый пользователь, создаем его и сохраняем в БД
+            const newUser = {
+                name: payload.name,
+                email: googleEmail,
+                id: 'google-' + payload.sub,
+                avatar: payload.picture,
+                type: 'Google Аккаунт',
+                subscription: 'Не активна'
+            };
+            users.push(newUser);
+            saveUsers(users);
+            loginSuccess(newUser);
+        }
+    }
+
+    // === 8. ГОСТЬ ===
+    document.getElementById('guestBtn').addEventListener('click', () => {
+        const guestUser = {
+            name: 'Гостевой Пользователь', email: 'guest_' + Date.now() + '@example.com',
+            id: 'guest-' + Math.floor(Math.random() * 100000),
+            avatar: GUEST_AVATAR, type: 'Гость', subscription: 'Не активна'
+        };
+        loginSuccess(guestUser);
+    });
+
+    // === 9. ОТОБРАЖЕНИЕ ===
+    function showLanding() {
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('welcomeView').style.display = 'none';
+        document.getElementById('landingView').style.display = 'block';
+        document.getElementById('navProfileBtn').style.display = 'flex';
+        updateUI();
+    }
+
+    function updateUI() {
+        const el = (id) => document.getElementById(id);
+        if (el('avatar')) el('avatar').src = currentUser.avatar;
+        if (el('displayName')) el('displayName').textContent = currentUser.name;
+        if (el('email')) el('email').textContent = currentUser.email;
+        if (el('userId')) el('userId').textContent = currentUser.id;
+        if (el('accountType')) el('accountType').textContent = currentUser.type;
+        
+        const sub = el('subStatus');
+        if (sub) {
+            sub.textContent = currentUser.subscription;
+            sub.style.color = currentUser.subscription !== 'Не активна' ? 'var(--success)' : 'var(--text-muted)';
+            sub.style.fontWeight = currentUser.subscription !== 'Не активна' ? '700' : '400';
+        }
+
+        const locked = el('downloadLocked');
+        const unlocked = el('downloadUnlocked');
+        if (locked && unlocked) {
+            if (currentUser.subscription !== 'Не активна') {
+                locked.style.display = 'none'; unlocked.style.display = 'block';
+            } else {
+                locked.style.display = 'block'; unlocked.style.display = 'none';
+            }
+        }
+    }
+
+    // === 10. РЕДАКТИРОВАНИЕ ИМЕНИ ===
+    document.getElementById('editNameBtn').addEventListener('click', () => {
+        document.getElementById('nameInput').value = currentUser.name;
+        document.getElementById('editNameBlock').style.display = 'flex';
+        document.getElementById('displayName').style.display = 'none';
+        document.getElementById('editNameBtn').style.display = 'none';
+        document.getElementById('nameInput').focus();
+    });
+
+    document.getElementById('saveNameBtn').addEventListener('click', () => {
+        const newName = document.getElementById('nameInput').value.trim();
+        if (newName) {
+            currentUser.name = newName;
+            document.getElementById('displayName').textContent = newName;
+            
+            // Синхронизация с БД
+            let users = getUsers();
+            const idx = users.findIndex(u => u.id === currentUser.id || (u.email === currentUser.email && u.type === currentUser.type));
+            if (idx !== -1) {
+                users[idx].name = newName;
+                saveUsers(users);
+            }
+            localStorage.setItem('rocket_session', JSON.stringify(currentUser));
+        }
+        document.getElementById('editNameBlock').style.display = 'none';
+        document.getElementById('displayName').style.display = 'block';
+        document.getElementById('editNameBtn').style.display = 'block';
+    });
+
+    document.getElementById('nameInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('saveNameBtn').click();
+    });
+
+    // === 11. ПОКУПКА ===
+    function buyPlan(planName, price) {
+        currentUser.subscription = planName;
+        
+        let users = getUsers();
+        const idx = users.findIndex(u => u.id === currentUser.id || (u.email === currentUser.email && u.type === currentUser.type));
+        if (idx !== -1) {
+            users[idx].subscription = planName;
+            saveUsers(users);
+        }
+        localStorage.setItem('rocket_session', JSON.stringify(currentUser));
+        
+        updateUI();
+        document.getElementById('modalText').textContent = `Тариф "${planName}" активирован. Лаунчер доступен для скачивания.`;
+        document.getElementById('successModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('successModal').style.display = 'none';
+        if (currentUser.subscription !== 'Не активна') switchTab('tab-download');
+    }
+
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('successModal')) closeModal();
+    };
+
+    // === 12. СКАЧИВАНИЕ ===
+    function downloadLauncher() {
+        const content = 'Rocket DLC Launcher v2.4.1\n\nДанный файл является демонстрационным.\nСпасибо за покупку!';
+        const blob = new Blob([content], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'RocketLauncher_Setup.exe';
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    // === 13. ВЫХОД ===
+    function signOut() {
+        if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
+        localStorage.removeItem('rocket_session');
+        
+        document.getElementById('appView').style.display = 'none';
+        document.getElementById('landingView').style.display = 'none';
+        document.getElementById('loginView').style.display = 'block';
+        document.getElementById('navProfileBtn').style.display = 'none';
+        
+        currentUser = { name: '', email: '', id: '', avatar: '', type: '', subscription: 'Не активна' };
+        isWelcomeSkipped = true;
+        updateUI();
+        switchAuthTab('login');
+    }
+
+    // === 14. ИНИЦИАЛИЗАЦИЯ ===
+    window.onload = function () {
+        if (typeof google !== 'undefined') {
+            google.accounts.id.initialize({
+                client_id: CLIENT_ID,
+                callback: handleCredentialResponse,
+            });
+            google.accounts.id.renderButton(
+                document.getElementById('buttonDiv'),
+                { theme: 'outline', size: 'large', text: 'signin_with', shape: 'rectangular', logo_alignment: 'left', locale: 'ru' }
+            );
+        }
+
+        const savedSession = localStorage.getItem('rocket_session');
+        if (savedSession) {
+            try {
+                currentUser = JSON.parse(savedSession);
+                isWelcomeSkipped = true;
+                document.getElementById('welcomeView').style.display = 'none';
+                document.getElementById('loginView').style.display = 'none';
+                showLanding();
+            } catch (e) {
+                localStorage.removeItem('rocket_session');
+            }
+        } else {
+            setTimeout(proceedToLogin, 2500);
+        }
+    };
+</script>
+
+</body>
+</html>
