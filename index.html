@@ -52,7 +52,6 @@
             overflow-x: hidden;
         }
 
-        /* === CANVAS ДЛЯ ЧАСТИЦ === */
         #particles-canvas {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none;
@@ -315,6 +314,11 @@
             <p class="subtitle" id="authSubtitle">Войдите в свой аккаунт</p>
             
             <form id="authForm" onsubmit="handleAuthSubmit(event)">
+                <!-- Поле Логина (появляется только при регистрации) -->
+                <div class="input-group" id="usernameGroup" style="display: none;">
+                    <input type="text" id="authUsername" placeholder="Придумайте логин" minlength="3">
+                </div>
+                
                 <div class="input-group">
                     <input type="email" id="authEmail" placeholder="Email" required>
                 </div>
@@ -382,6 +386,7 @@
                             <button id="saveNameBtn">ОК</button>
                         </div>
                         <div class="info-grid">
+                            <div class="info-row"><span class="info-label">Логин</span><span class="info-value" id="profileUsername">-</span></div>
                             <div class="info-row"><span class="info-label">ID пользователя</span><span class="info-value" id="userId"></span></div>
                             <div class="info-row"><span class="info-label">Тип аккаунта</span><span class="info-value" id="accountType"></span></div>
                             <div class="info-row"><span class="info-label">Статус подписки</span><span class="info-value" id="subStatus" style="color: var(--text-muted);">Не активна</span></div>
@@ -523,7 +528,7 @@
     const CLIENT_ID = 'ВАШ_CLIENT_ID'; // <-- Вставьте ваш ID
     const GUEST_AVATAR = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a8a93"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
     
-    let currentUser = { name: '', email: '', id: '', avatar: '', type: '', subscription: 'Не активна' };
+    let currentUser = { name: '', email: '', id: '', avatar: '', type: '', subscription: 'Не активна', username: '' };
 
     // === 3. БАЗА ДАННЫХ ===
     function getUsers() { return JSON.parse(localStorage.getItem('rocket_users') || '[]'); }
@@ -539,10 +544,15 @@
         document.getElementById('authTitle').textContent = mode === 'login' ? 'С возвращением' : 'Создать аккаунт';
         document.getElementById('authSubtitle').textContent = mode === 'login' ? 'Войдите в свой аккаунт' : 'Зарегистрируйтесь, чтобы начать';
         document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Войти' : 'Зарегистрироваться';
+        
+        // Показываем/скрываем поля
+        document.getElementById('usernameGroup').style.display = mode === 'register' ? 'block' : 'none';
         document.getElementById('confirmPasswordGroup').style.display = mode === 'register' ? 'block' : 'none';
+        
         document.getElementById('authError').textContent = '';
         document.getElementById('authPassword').value = '';
         document.getElementById('authConfirmPassword').value = '';
+        document.getElementById('authUsername').value = '';
     }
 
     function handleAuthSubmit(e) {
@@ -550,24 +560,38 @@
         const email = document.getElementById('authEmail').value.trim().toLowerCase();
         const password = document.getElementById('authPassword').value;
         const confirmPassword = document.getElementById('authConfirmPassword').value;
+        const username = document.getElementById('authUsername').value.trim();
         const errorEl = document.getElementById('authError');
         errorEl.textContent = '';
 
         if (authMode === 'register') {
+            if (username.length < 3) { errorEl.textContent = 'Логин должен быть не менее 3 символов'; return; }
             if (password.length < 6) { errorEl.textContent = 'Пароль должен содержать минимум 6 символов'; return; }
             if (password !== confirmPassword) { errorEl.textContent = 'Пароли не совпадают'; return; }
             
             let users = getUsers();
-            // Строгая проверка: есть ли уже такой email (включая Google-аккаунты)
+            
+            // Проверка на уникальность Email
             if (users.find(u => u.email.toLowerCase() === email)) {
-                errorEl.textContent = 'Этот Email уже зарегистрирован. Попробуйте войти или используйте Google.';
+                errorEl.textContent = 'Этот Email уже зарегистрирован. Попробуйте войти.';
+                return;
+            }
+
+            // Проверка на уникальность Логина
+            if (users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
+                errorEl.textContent = 'Этот логин уже занят. Придумайте другой.';
                 return;
             }
             
             const newUser = {
-                email: email, password: password, name: email.split('@')[0],
-                id: 'user-' + Date.now(), avatar: GUEST_AVATAR,
-                type: 'Аккаунт Rocket DLC', subscription: 'Не активна'
+                username: username,
+                email: email, 
+                password: password, 
+                name: username, // По умолчанию отображаемое имя = логин
+                id: 'user-' + Date.now(), 
+                avatar: GUEST_AVATAR,
+                type: 'Аккаунт Rocket DLC', 
+                subscription: 'Не активна'
             };
             
             users.push(newUser);
@@ -576,6 +600,7 @@
             
         } else {
             let users = getUsers();
+            // Вход по Email и паролю (логин вводить не нужно)
             const user = users.find(u => u.email.toLowerCase() === email && u.password === password);
             if (!user) {
                 errorEl.textContent = 'Неверный email или пароль (или аккаунт создан через Google)';
@@ -666,24 +691,33 @@
 
     function handleCredentialResponse(response) {
         const payload = decodeJwtResponse(response.credential);
-        const googleEmail = payload.email.toLowerCase(); // Приводим к нижнему регистру
+        const googleEmail = payload.email.toLowerCase();
         
         let users = getUsers();
-        // Ищем, есть ли уже пользователь с таким Email (зарегистрированный обычным способом или ранее через Google)
+        // Ищем, есть ли уже пользователь с таким Email
         const existingUser = users.find(u => u.email.toLowerCase() === googleEmail);
 
         if (existingUser) {
-            // Если пользователь уже есть в базе (например, регался через пароль), 
-            // мы не создаем дубликат, а просто авторизуем его.
-            // (Опционально: можно обновить ему аватарку или имя из Google, если они были пустые)
+            // Если есть - просто логиним (запрет на дубликаты)
             if (!existingUser.avatar || existingUser.avatar === GUEST_AVATAR) {
                 existingUser.avatar = payload.picture;
+                saveUsers(users);
             }
-            saveUsers(users);
             loginSuccess(existingUser);
         } else {
-            // Если это новый пользователь, создаем его и сохраняем в БД
+            // Если это новый пользователь через Google - генерируем ему уникальный логин
+            let baseUsername = googleEmail.split('@')[0];
+            let finalUsername = baseUsername;
+            let counter = 1;
+            
+            // Проверяем, не занят ли такой логин
+            while (users.find(u => u.username && u.username.toLowerCase() === finalUsername.toLowerCase())) {
+                finalUsername = baseUsername + counter;
+                counter++;
+            }
+
             const newUser = {
+                username: finalUsername,
                 name: payload.name,
                 email: googleEmail,
                 id: 'google-' + payload.sub,
@@ -700,7 +734,9 @@
     // === 8. ГОСТЬ ===
     document.getElementById('guestBtn').addEventListener('click', () => {
         const guestUser = {
-            name: 'Гостевой Пользователь', email: 'guest_' + Date.now() + '@example.com',
+            username: 'guest_' + Math.floor(Math.random() * 10000),
+            name: 'Гостевой Пользователь', 
+            email: 'guest_' + Date.now() + '@example.com',
             id: 'guest-' + Math.floor(Math.random() * 100000),
             avatar: GUEST_AVATAR, type: 'Гость', subscription: 'Не активна'
         };
@@ -723,6 +759,7 @@
         if (el('email')) el('email').textContent = currentUser.email;
         if (el('userId')) el('userId').textContent = currentUser.id;
         if (el('accountType')) el('accountType').textContent = currentUser.type;
+        if (el('profileUsername')) el('profileUsername').textContent = currentUser.username || '-';
         
         const sub = el('subStatus');
         if (sub) {
@@ -822,7 +859,7 @@
         document.getElementById('loginView').style.display = 'block';
         document.getElementById('navProfileBtn').style.display = 'none';
         
-        currentUser = { name: '', email: '', id: '', avatar: '', type: '', subscription: 'Не активна' };
+        currentUser = { name: '', email: '', id: '', avatar: '', type: '', subscription: 'Не активна', username: '' };
         isWelcomeSkipped = true;
         updateUI();
         switchAuthTab('login');
