@@ -1,0 +1,457 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ETHER VISUAL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;background:#09090d;color:#fff;
+ font-family:Manrope,Arial,sans-serif;
+}
+header{
+ height:75px;padding:0 7%;
+ display:flex;align-items:center;
+ justify-content:space-between;
+ background:#0b0a0f;
+ border-bottom:1px solid #25232d;
+ position:sticky;top:0;z-index:10;
+}
+.logo{font-size:22px;font-weight:900;letter-spacing:2px}
+.logo span{color:#a56aff}
+nav{display:flex;gap:25px}
+nav a{color:#aaa;text-decoration:none;font-size:13px}
+nav a:hover{color:#a56aff}
+button,.btn{
+ background:#a56aff;color:#100b18;
+ border:1px solid #a56aff;padding:12px 18px;
+ border-radius:7px;font-weight:800;
+ cursor:pointer;text-decoration:none;
+ display:inline-block;font-family:inherit;
+}
+button:hover,.btn:hover{filter:brightness(1.15)}
+.wrap{max-width:1150px;margin:auto;padding:30px 20px}
+.hero{
+ padding:100px 25px;text-align:center;
+ background:radial-gradient(ellipse at center top,#38204b,#111018 65%,#09090d);
+ border-bottom:1px solid #25232d;
+}
+.hero h1{font-size:60px;letter-spacing:-2px;margin:15px 0}
+.hero h1 span{color:#a56aff}
+.hero p{color:#aaa;max-width:600px;margin:20px auto;line-height:1.8}
+.kicker{color:#b98aff;letter-spacing:3px;font-size:11px;font-weight:bold}
+section{padding:45px 0}
+.heading{text-align:center;margin-bottom:30px}
+.heading h2{font-size:30px}
+.heading p{color:#888;font-size:13px}
+.features,.products{
+ display:grid;grid-template-columns:repeat(3,1fr);gap:17px;
+}
+.panel,.card,.feature{
+ background:#111117;border:1px solid #25232d;
+ border-radius:10px;
+}
+.feature{padding:23px}
+.feature h3{font-size:15px}
+.feature p{font-size:12px;color:#999;line-height:1.7}
+.feature .ico{font-size:25px;color:#b98aff}
+.catalog-head{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:15px;flex-wrap:wrap;
+}
+input{
+ background:#111117;border:1px solid #393342;
+ border-radius:7px;padding:13px;color:white;
+ outline:none;font-family:inherit;
+}
+input:focus{border-color:#a56aff}
+.cover{
+ height:155px;display:grid;place-items:center;
+ font-size:60px;
+ background:linear-gradient(135deg,#30203e,#111018);
+}
+.card{overflow:hidden;transition:.2s}
+.card:hover{border-color:#a56aff;transform:translateY(-4px)}
+.cardbody{padding:18px}
+.tag{font-size:10px;color:#b98aff;letter-spacing:2px}
+.card h3{font-size:16px}
+.card p{color:#999;font-size:12px;line-height:1.6;min-height:35px}
+.card .btn{width:100%;text-align:center;margin-top:10px}
+.profile{
+ display:flex;align-items:center;gap:15px;flex-wrap:wrap;
+ padding:20px;
+}
+.avatar{
+ width:58px;height:58px;border-radius:9px;
+ display:grid;place-items:center;font-size:28px;
+ background:#30203e;
+}
+.profile-info{flex:1;min-width:180px}
+.profile-info h3{margin:0 0 5px}
+.profile-info p{margin:0;color:#999;font-size:12px}
+.auth{
+ display:grid;grid-template-columns:1fr 1fr;gap:18px;
+}
+.auth-box{padding:22px}
+.auth-box h3{margin-top:0}
+.auth-box input{width:100%;margin:6px 0}
+.auth-box button{width:100%;margin-top:10px}
+.hidden{display:none!important}
+#message{color:#ff9eae;font-size:12px;margin-top:12px}
+#history{color:#aaa;font-size:12px}
+footer{
+ border-top:1px solid #25232d;
+ text-align:center;padding:30px;color:#777;font-size:12px;
+}
+@media(max-width:750px){
+ nav{display:none}
+ .features,.products,.auth{grid-template-columns:1fr}
+ .hero h1{font-size:39px}
+ .hero{padding:70px 15px}
+}
+
+/* ETHER VISUAL — black & purple theme */
+:root{color-scheme:dark}
+body{background:#050407;color:#f7f1ff}
+header{background:rgba(7,5,11,.96);border-bottom:1px solid #302044}
+.logo span,.hero h1 span{color:#b45cff}
+nav a{color:#b9adc8}
+nav a:hover{color:#d39aff}
+button,.btn{background:linear-gradient(135deg,#9b35f5,#6e20bd);color:#fff;border:1px solid #b45cff;box-shadow:0 0 18px rgba(157,58,245,.16)}
+button:hover,.btn:hover{filter:brightness(1.18);box-shadow:0 0 24px rgba(157,58,245,.32)}
+.hero{background:radial-gradient(ellipse at 50% 0%,#351052 0%,#170b25 42%,#050407 78%);border-bottom:1px solid #302044}
+.kicker,.tag,.feature .ico{color:#c78aff}
+.panel,.card,.feature{background:linear-gradient(145deg,#120d1a,#0b0810);border:1px solid #302044}
+.card:hover{border-color:#a94cff;box-shadow:0 10px 30px rgba(115,35,180,.15)}
+.cover{background:linear-gradient(135deg,#32134b,#100a18)}
+input{background:#0c0811;border:1px solid #46305c;color:#fff}
+input:focus{border-color:#b45cff;box-shadow:0 0 0 3px rgba(180,92,255,.12)}
+footer{border-top:1px solid #302044;color:#8e7d9f}
+#account{min-height:calc(100vh - 140px);padding:35px 0;background:radial-gradient(ellipse at top,#1e0c30 0%,#08060b 60%)}
+.account-wrap{max-width:900px}
+.back-button{background:#120c1b;color:#dfc4ff;border-color:#54316f;box-shadow:none;margin-bottom:25px}
+.account-wrap{max-width:900px}
+.back-button{background:#120c1b;color:#dfc4ff;border-color:#54316f;box-shadow:none;margin-bottom:25px}
+.avatar{background:linear-gradient(135deg,#57227c,#21102e);border:1px solid #8b42c4}
+
+
+/* centered single product + big E */
+.products{display:flex;justify-content:center;flex-wrap:wrap}
+.products .card{width:calc((100% - 34px)/3);min-width:260px}
+.big-e{
+ font-size:130px;font-weight:900;line-height:1;margin:0 0 10px;
+ color:#b45cff;text-shadow:0 0 30px rgba(180,92,255,.55),0 0 70px rgba(157,58,245,.3);
+}
+@media(max-width:750px){
+ .products .card{width:100%}
+ .big-e{font-size:90px}
+}
+
+.utable{width:100%;border-collapse:collapse;font-size:12px}
+.utable th,.utable td{text-align:left;padding:8px 10px;border-bottom:1px solid #302044;white-space:nowrap}
+.utable th{color:#c78aff}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="logo">ETHER <span>VISUAL</span></div>
+ <nav>
+  <a href="#home" onclick="closeAccount()">Главная</a>
+  <a href="#features" onclick="closeAccount()">Преимущества</a>
+  <a href="#catalog" onclick="closeAccount()">Каталог</a>
+ </nav>
+ <button type="button" class="btn" onclick="openAccount()">Аккаунт</button>
+</header>
+
+<div id="storefront">
+<div class="hero" id="home">
+ <div class="big-e">E</div>
+ <div class="kicker">MINECRAFT VISUAL MARKETPLACE</div>
+ <h1>YOUR GAME.<br><span>YOUR STYLE.</span></h1>
+ <p>
+  Открой новые возможности Minecraft.
+  Лучшие текстуры, шейдеры и визуальные сборки
+  собраны в одном месте.
+ </p>
+ <a href="#catalog" class="btn">Смотреть каталог ↗</a>
+</div>
+
+<div class="wrap">
+
+<section id="features">
+ <div class="heading">
+  <div class="kicker">WHY ETHER VISUAL</div>
+  <h2>Почему мы?</h2>
+  <p>Всё необходимое для твоего Minecraft.</p>
+ </div>
+
+ <div class="features">
+  <div class="feature">
+   <div class="ico">✦</div>
+   <h3>Красивые визуалы</h3>
+   <p>Подборка шейдеров и текстур для игры.</p>
+  </div>
+  <div class="feature">
+   <div class="ico">⇩</div>
+   <h3>Быстрое скачивание</h3>
+   <p>Загружай понравившиеся файлы после входа в аккаунт.</p>
+  </div>
+  <div class="feature">
+   <div class="ico">◈</div>
+   <h3>Личный кабинет</h3>
+   <p>Управляй своим аккаунтом и загрузками.</p>
+  </div>
+ </div>
+</section>
+
+<section id="catalog">
+ <div class="catalog-head">
+  <div>
+   <div class="kicker">COLLECTION</div>
+   <h2>Каталог визуалов</h2>
+  </div>
+  <input id="search" placeholder="Поиск..." oninput="filterProducts()">
+ </div>
+
+ <br>
+
+ <div class="products">
+
+  <div class="card" data-name="ether visual beta">
+   <div class="cover">💜</div>
+   <div class="cardbody">
+    <span class="tag">ETHER VISUAL</span>
+    <h3>Ether Visual Beta</h3>
+    <p>Бета-версия ETHER VISUAL. Скачай JAR-файл.</p>
+    <a class="btn download" href="downloads/Ether%20Visual%20beta.jar"
+    download="Ether Visual beta.jar" data-file="Ether Visual Beta">🔒 Войти для скачивания</a>
+   </div>
+  </div>
+
+ </div>
+</section>
+
+</div>
+</div>
+
+<section id="account" class="hidden">
+ <div class="wrap account-wrap">
+  <button type="button" class="back-button" onclick="closeAccount()">← Назад в магазин</button>
+ <div class="heading">
+  <div class="kicker">YOUR ACCOUNT</div>
+  <h2>Личный кабинет</h2>
+  <p>Регистрация и вход только по логину и паролю — email не нужен. При регистрации и входе сохраняется IP-адрес.</p>
+ </div>
+
+ <div id="authPanel" class="auth">
+
+  <div class="panel auth-box">
+   <h3>Регистрация</h3>
+   <input id="regLogin" autocomplete="username" placeholder="Придумай логин">
+   
+   <input id="regPassword" type="password" autocomplete="new-password" placeholder="Пароль">
+   <input id="regRepeat" type="password" autocomplete="new-password" placeholder="Повтори пароль">
+   <button onclick="register()">Создать аккаунт</button>
+  </div>
+
+  <div class="panel auth-box">
+   <h3>Вход</h3>
+   <input id="loginName" autocomplete="username" placeholder="Логин">
+   <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Пароль">
+   <button onclick="login()">Войти в аккаунт</button>
+  </div>
+
+ </div>
+
+ <div id="profilePanel" class="panel profile hidden">
+  <div class="avatar">👑</div>
+  <div class="profile-info">
+   <h3 id="profileName">Игрок</h3>
+   <p id="profileLogin"></p>
+   <span class="tag">ETHER VISUAL ACCOUNT</span>
+  </div>
+  <button onclick="logout()">Выйти</button>
+
+  <div style="width:100%;border-top:1px solid #292430;padding-top:15px">
+   <h3>Мои загрузки</h3>
+   <div id="history">Пока загрузок нет.</div>
+  </div>
+ </div>
+
+ <div id="adminPanel" class="panel hidden" style="padding:20px;margin-top:18px">
+  <h3 style="margin-top:0">База пользователей (<span id="adminCount">0</span>)</h3>
+  <div style="overflow-x:auto">
+   <table class="utable">
+    <thead><tr><th>Логин</th><th>Регистрация</th><th>IP регистрации</th><th>Последний вход</th><th>Последний IP</th><th>Все IP</th></tr></thead>
+    <tbody id="adminRows"></tbody>
+   </table>
+  </div>
+ </div>
+
+ <div id="message"></div>
+ </div>
+</section>
+</div>
+
+<footer>ETHER VISUAL © 2026 · MINECRAFT VISUALS</footer>
+
+
+<script>
+let currentUser="", isAdmin=false;
+
+window.openAccount=()=>{
+ document.getElementById("storefront").classList.add("hidden");
+ document.getElementById("account").classList.remove("hidden");
+ window.scrollTo({top:0,behavior:"smooth"});
+ message("");
+ refreshMe();
+};
+
+window.closeAccount=()=>{
+ document.getElementById("account").classList.add("hidden");
+ document.getElementById("storefront").classList.remove("hidden");
+ window.scrollTo({top:0,behavior:"smooth"});
+ message("");
+};
+
+function message(t){
+ document.getElementById("message").textContent=t;
+}
+
+async function api(url,body){
+ try{
+  const r=await fetch(url,{
+   method:body?"POST":"GET",
+   headers:{"Content-Type":"application/json"},
+   body:body?JSON.stringify(body):undefined
+  });
+  const d=await r.json().catch(()=>({}));
+  return {ok:r.ok,...d};
+ }catch{
+  return {ok:false,error:"Нет связи с сервером. Попробуй обновить страницу."};
+ }
+}
+
+async function refreshMe(){
+ const d=await api("/api?op=me");
+ currentUser=d.login||"";
+ isAdmin=!!d.admin;
+ renderAccount();
+}
+
+window.register=async()=>{
+ const name=document.getElementById("regLogin").value.trim();
+ const password=document.getElementById("regPassword").value;
+ const repeat=document.getElementById("regRepeat").value;
+
+ if(!name||!password||!repeat) return message("Заполни все поля!");
+ if(name.length<3) return message("Логин должен содержать минимум 3 символа.");
+ if(!/^[a-zA-Z0-9_А-Яа-яЁё-]+$/.test(name))
+  return message("В логине используй только буквы, цифры, _ или -.");
+ if(password.length<6) return message("Пароль должен быть не короче 6 символов.");
+ if(password!==repeat) return message("Пароли не совпадают!");
+
+ const d=await api("/api?op=register",{login:name,password});
+ if(!d.ok) return message(d.error||"Ошибка регистрации.");
+ document.getElementById("regPassword").value="";
+ document.getElementById("regRepeat").value="";
+ message("Аккаунт создан! Добро пожаловать.");
+ refreshMe();
+};
+
+window.login=async()=>{
+ const name=document.getElementById("loginName").value.trim();
+ const password=document.getElementById("loginPassword").value;
+ if(!name||!password) return message("Введи логин и пароль.");
+
+ const d=await api("/api?op=login",{login:name,password});
+ if(!d.ok) return message(d.error||"Неверный логин или пароль.");
+ document.getElementById("loginPassword").value="";
+ message("Ты успешно вошёл!");
+ refreshMe();
+};
+
+window.logout=async()=>{
+ await api("/api?op=logout",{});
+ currentUser="";
+ isAdmin=false;
+ message("Ты вышел из аккаунта.");
+ renderAccount();
+};
+
+function renderAccount(){
+ const signedIn=!!currentUser;
+ document.getElementById("authPanel").classList.toggle("hidden",signedIn);
+ document.getElementById("profilePanel").classList.toggle("hidden",!signedIn);
+ document.getElementById("adminPanel").classList.toggle("hidden",!isAdmin);
+ if(signedIn){
+  document.getElementById("profileName").textContent=currentUser;
+  document.getElementById("profileLogin").textContent="Логин: "+currentUser;
+ }
+ document.querySelectorAll(".download").forEach(a=>{
+  a.textContent=signedIn?"⬇ Скачать":"🔒 Войти для скачивания";
+ });
+ showHistory();
+ if(isAdmin) loadAdmin();
+}
+
+async function loadAdmin(){
+ const d=await api("/api?op=users");
+ const body=document.getElementById("adminRows");
+ body.innerHTML="";
+ if(!d.ok) return;
+ document.getElementById("adminCount").textContent=d.users.length;
+ const fmt=t=>t?new Date(t).toLocaleString("ru-RU"):"—";
+ d.users.forEach(u=>{
+  const tr=document.createElement("tr");
+  [u.login,fmt(u.created),u.regIp,fmt(u.lastLogin),u.lastIp,(u.ips||[]).join(", ")].forEach(v=>{
+   const td=document.createElement("td");
+   td.textContent=v;
+   tr.appendChild(td);
+  });
+  body.appendChild(tr);
+ });
+}
+
+document.querySelectorAll(".download").forEach(a=>{
+ a.addEventListener("click",e=>{
+  if(!currentUser){
+   e.preventDefault();
+   message("Сначала войди или зарегистрируйся!");
+   window.openAccount();
+   return;
+  }
+  const key="etherHistory_"+currentUser.toLowerCase();
+  let list=JSON.parse(localStorage.getItem(key)||"[]");
+  if(!list.includes(a.dataset.file)) list.push(a.dataset.file);
+  localStorage.setItem(key,JSON.stringify(list));
+  showHistory();
+ });
+});
+
+function showHistory(){
+ const list=currentUser
+  ?JSON.parse(localStorage.getItem("etherHistory_"+currentUser.toLowerCase())||"[]")
+  :[];
+ document.getElementById("history").textContent=
+  list.length?list.join(" · "):"Пока загрузок нет.";
+}
+
+window.filterProducts=()=>{
+ const q=document.getElementById("search").value.toLowerCase();
+ document.querySelectorAll(".card").forEach(card=>{
+  card.style.display=card.dataset.name.includes(q)?"block":"none";
+ });
+};
+
+refreshMe();
+</script>
+</body>
+</html>
+
