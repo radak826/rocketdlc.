@@ -162,11 +162,10 @@ footer{border-top:1px solid #302044;color:#8e7d9f}
 <header>
  <div class="logo">ETHER <span>VISUAL</span></div>
  <nav>
-  <a href="#home" onclick="closeAccount()">Главная</a>
-  <a href="#features" onclick="closeAccount()">Преимущества</a>
-  <a href="#catalog" onclick="closeAccount()">Каталог</a>
+  <a href="#home">Главная</a>
+  <a href="#features">Преимущества</a>
+  <a href="#catalog">Каталог</a>
  </nav>
- <button type="button" class="btn" onclick="openAccount()">Аккаунт</button>
 </header>
 
 <div id="storefront">
@@ -200,12 +199,12 @@ footer{border-top:1px solid #302044;color:#8e7d9f}
   <div class="feature">
    <div class="ico">⇩</div>
    <h3>Быстрое скачивание</h3>
-   <p>Загружай понравившиеся файлы после входа в аккаунт.</p>
+   <p>Загружай понравившиеся файлы в один клик.</p>
   </div>
   <div class="feature">
    <div class="ico">◈</div>
-   <h3>Личный кабинет</h3>
-   <p>Управляй своим аккаунтом и загрузками.</p>
+   <h3>Без регистрации</h3>
+   <p>Скачивай сразу — аккаунт не нужен.</p>
   </div>
  </div>
 </section>
@@ -230,7 +229,7 @@ footer{border-top:1px solid #302044;color:#8e7d9f}
     <h3>Ether Visual Beta</h3>
     <p>Бета-версия ETHER VISUAL. Скачай JAR-файл.</p>
     <a class="btn download" href="downloads/Ether%20Visual%20beta.jar"
-    download="Ether Visual beta.jar" data-file="Ether Visual Beta">🔒 Войти для скачивания</a>
+    download="Ether Visual beta.jar" data-file="Ether Visual Beta">⬇ Скачать</a>
    </div>
   </div>
 
@@ -240,217 +239,16 @@ footer{border-top:1px solid #302044;color:#8e7d9f}
 </div>
 </div>
 
-<section id="account" class="hidden">
- <div class="wrap account-wrap">
-  <button type="button" class="back-button" onclick="closeAccount()">← Назад в магазин</button>
- <div class="heading">
-  <div class="kicker">YOUR ACCOUNT</div>
-  <h2>Личный кабинет</h2>
-  <p>Регистрация и вход только по логину и паролю — email не нужен. При регистрации и входе сохраняется IP-адрес.</p>
- </div>
-
- <div id="authPanel" class="auth">
-
-  <div class="panel auth-box">
-   <h3>Регистрация</h3>
-   <input id="regLogin" autocomplete="username" placeholder="Придумай логин">
-   
-   <input id="regPassword" type="password" autocomplete="new-password" placeholder="Пароль">
-   <input id="regRepeat" type="password" autocomplete="new-password" placeholder="Повтори пароль">
-   <button onclick="register()">Создать аккаунт</button>
-  </div>
-
-  <div class="panel auth-box">
-   <h3>Вход</h3>
-   <input id="loginName" autocomplete="username" placeholder="Логин">
-   <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Пароль">
-   <button onclick="login()">Войти в аккаунт</button>
-  </div>
-
- </div>
-
- <div id="profilePanel" class="panel profile hidden">
-  <div class="avatar">👑</div>
-  <div class="profile-info">
-   <h3 id="profileName">Игрок</h3>
-   <p id="profileLogin"></p>
-   <span class="tag">ETHER VISUAL ACCOUNT</span>
-  </div>
-  <button onclick="logout()">Выйти</button>
-
-  <div style="width:100%;border-top:1px solid #292430;padding-top:15px">
-   <h3>Мои загрузки</h3>
-   <div id="history">Пока загрузок нет.</div>
-  </div>
- </div>
-
- <div id="adminPanel" class="panel hidden" style="padding:20px;margin-top:18px">
-  <h3 style="margin-top:0">База пользователей (<span id="adminCount">0</span>)</h3>
-  <div style="overflow-x:auto">
-   <table class="utable">
-    <thead><tr><th>Логин</th><th>Регистрация</th><th>IP регистрации</th><th>Последний вход</th><th>Последний IP</th><th>Все IP</th></tr></thead>
-    <tbody id="adminRows"></tbody>
-   </table>
-  </div>
- </div>
-
- <div id="message"></div>
- </div>
-</section>
-</div>
-
 <footer>ETHER VISUAL © 2026 · MINECRAFT VISUALS</footer>
 
 
 <script>
-let currentUser="", isAdmin=false;
-
-window.openAccount=()=>{
- document.getElementById("storefront").classList.add("hidden");
- document.getElementById("account").classList.remove("hidden");
- window.scrollTo({top:0,behavior:"smooth"});
- message("");
- refreshMe();
-};
-
-window.closeAccount=()=>{
- document.getElementById("account").classList.add("hidden");
- document.getElementById("storefront").classList.remove("hidden");
- window.scrollTo({top:0,behavior:"smooth"});
- message("");
-};
-
-function message(t){
- document.getElementById("message").textContent=t;
-}
-
-async function api(url,body){
- try{
-  const r=await fetch(url,{
-   method:body?"POST":"GET",
-   headers:{"Content-Type":"application/json"},
-   body:body?JSON.stringify(body):undefined
-  });
-  const d=await r.json().catch(()=>({}));
-  return {ok:r.ok,...d};
- }catch{
-  return {ok:false,error:"Нет связи с сервером. Запусти сайт командой: node server.js"};
- }
-}
-
-async function refreshMe(){
- const d=await api("/api/me");
- currentUser=d.login||"";
- isAdmin=!!d.admin;
- renderAccount();
-}
-
-window.register=async()=>{
- const name=document.getElementById("regLogin").value.trim();
- const password=document.getElementById("regPassword").value;
- const repeat=document.getElementById("regRepeat").value;
-
- if(!name||!password||!repeat) return message("Заполни все поля!");
- if(name.length<3) return message("Логин должен содержать минимум 3 символа.");
- if(!/^[a-zA-Z0-9_А-Яа-яЁё-]+$/.test(name))
-  return message("В логине используй только буквы, цифры, _ или -.");
- if(password.length<6) return message("Пароль должен быть не короче 6 символов.");
- if(password!==repeat) return message("Пароли не совпадают!");
-
- const d=await api("/api/register",{login:name,password});
- if(!d.ok) return message(d.error||"Ошибка регистрации.");
- document.getElementById("regPassword").value="";
- document.getElementById("regRepeat").value="";
- message("Аккаунт создан! Добро пожаловать.");
- refreshMe();
-};
-
-window.login=async()=>{
- const name=document.getElementById("loginName").value.trim();
- const password=document.getElementById("loginPassword").value;
- if(!name||!password) return message("Введи логин и пароль.");
-
- const d=await api("/api/login",{login:name,password});
- if(!d.ok) return message(d.error||"Неверный логин или пароль.");
- document.getElementById("loginPassword").value="";
- message("Ты успешно вошёл!");
- refreshMe();
-};
-
-window.logout=async()=>{
- await api("/api/logout",{});
- currentUser="";
- isAdmin=false;
- message("Ты вышел из аккаунта.");
- renderAccount();
-};
-
-function renderAccount(){
- const signedIn=!!currentUser;
- document.getElementById("authPanel").classList.toggle("hidden",signedIn);
- document.getElementById("profilePanel").classList.toggle("hidden",!signedIn);
- document.getElementById("adminPanel").classList.toggle("hidden",!isAdmin);
- if(signedIn){
-  document.getElementById("profileName").textContent=currentUser;
-  document.getElementById("profileLogin").textContent="Логин: "+currentUser;
- }
- document.querySelectorAll(".download").forEach(a=>{
-  a.textContent=signedIn?"⬇ Скачать":"🔒 Войти для скачивания";
- });
- showHistory();
- if(isAdmin) loadAdmin();
-}
-
-async function loadAdmin(){
- const d=await api("/api/admin/users");
- const body=document.getElementById("adminRows");
- body.innerHTML="";
- if(!d.ok) return;
- document.getElementById("adminCount").textContent=d.users.length;
- const fmt=t=>t?new Date(t).toLocaleString("ru-RU"):"—";
- d.users.forEach(u=>{
-  const tr=document.createElement("tr");
-  [u.login,fmt(u.created),u.regIp,fmt(u.lastLogin),u.lastIp,(u.ips||[]).join(", ")].forEach(v=>{
-   const td=document.createElement("td");
-   td.textContent=v;
-   tr.appendChild(td);
-  });
-  body.appendChild(tr);
- });
-}
-
-document.querySelectorAll(".download").forEach(a=>{
- a.addEventListener("click",e=>{
-  if(!currentUser){
-   e.preventDefault();
-   message("Сначала войди или зарегистрируйся!");
-   window.openAccount();
-   return;
-  }
-  const key="etherHistory_"+currentUser.toLowerCase();
-  let list=JSON.parse(localStorage.getItem(key)||"[]");
-  if(!list.includes(a.dataset.file)) list.push(a.dataset.file);
-  localStorage.setItem(key,JSON.stringify(list));
-  showHistory();
- });
-});
-
-function showHistory(){
- const list=currentUser
-  ?JSON.parse(localStorage.getItem("etherHistory_"+currentUser.toLowerCase())||"[]")
-  :[];
- document.getElementById("history").textContent=
-  list.length?list.join(" · "):"Пока загрузок нет.";
-}
-
 window.filterProducts=()=>{
  const q=document.getElementById("search").value.toLowerCase();
  document.querySelectorAll(".card").forEach(card=>{
   card.style.display=card.dataset.name.includes(q)?"block":"none";
  });
 };
-
-refreshMe();
 </script>
 </body>
 </html>
